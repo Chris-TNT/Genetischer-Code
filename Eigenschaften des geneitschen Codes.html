@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CodeLab · Der genetische Code</title>
+<style>
+:root{--bg:#f1f5fa;--paper:#fff;--ink:#192d43;--muted:#53677e;--line:#d9e3ef;--blue:#285dba;--pale:#edf3ff;--green:#18734f;--red:#b53148;--gold:#ffcf70}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55;color:var(--ink);background:var(--bg)}
+button,select{font:inherit}
+button{cursor:pointer}
+button,select{border:1px solid #b9c8da;border-radius:10px;padding:10px 13px;color:var(--ink);background:white}
+button:hover{background:#eef3fc}
+button:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #d58a17;outline-offset:3px}
+button.primary,button[aria-selected="true"]{background:var(--blue);border-color:var(--blue);color:white}
+button.secondary{background:var(--pale);color:var(--blue)}
+button:disabled{opacity:.5;cursor:default}
+.wrap{max-width:1200px;margin:auto;padding:24px}
+header{background:linear-gradient(120deg,#142d4b,#285d83);color:white;padding:30px;border-radius:23px}
+header p{color:#e0edf7;max-width:880px}
+.eyebrow{font-size:.8rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+h1{font-size:clamp(2rem,5vw,3rem);margin:8px 0;line-height:1.15}
+h2{font-size:1.45rem;margin:0 0 12px}
+h3{font-size:1.08rem;margin:0 0 8px}
+p{margin:8px 0}
+.tabs,.actions,.row,.legend{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tabs{margin:20px 0}
+.tabs button{font-weight:700}
+.panel,.card{background:var(--paper);border:1px solid var(--line);border-radius:17px;padding:22px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid .card{margin:0}
+.note{font-size:.9rem;color:var(--muted)}
+.pill{display:inline-block;padding:4px 9px;background:var(--pale);color:#224e98;border-radius:20px;font-weight:750;font-size:.78rem;margin-bottom:10px}
+.callout{background:#fff7e6;border-left:4px solid #e8ac3f;border-radius:0 10px 10px 0;padding:12px;margin:14px 0}
+.formula{font-family:ui-monospace,Consolas,monospace;font-size:1.25rem;font-weight:750;background:#f3f7fc;padding:13px;border-radius:10px;text-align:center;margin:13px 0}
+.mini{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:9px;background:#f5f8fd;padding:14px;border-radius:12px;margin:12px 0}
+.chip{font-family:ui-monospace,Consolas,monospace;letter-spacing:.08em;background:white;border:1px solid #c7d7ed;border-radius:8px;padding:5px 9px;font-weight:800}
+.arrow{color:var(--blue);font-weight:800}
+.wheel-layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(270px,.7fr);gap:22px;align-items:start}
+.wheelbox{min-width:0}
+canvas{display:block;width:100%;height:auto;max-width:700px;margin:auto;cursor:crosshair}
+.legend{justify-content:center;font-size:.78rem;gap:8px 15px;color:var(--muted)}
+.swatch{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;border:1px solid #a7b5c5}
+.controls{background:#f5f8fd;border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:12px}
+.base-selects{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+label{display:block;font-size:.9rem;font-weight:700}
+select{display:block;width:100%;margin:6px 0 12px;min-width:0}
+.meaning{background:#e8f0ff;border-radius:12px;padding:15px;margin:12px 0;min-height:100px}
+.meaning strong{font-size:1.2rem}
+.meaning small{display:block;color:#345474;margin-top:6px}
+.actions{margin:16px 0}
+details{background:#f5f8fc;border:1px solid var(--line);border-radius:12px;padding:12px 15px;margin:14px 0}
+summary{cursor:pointer;font-weight:750}
+ul,ol{padding-left:24px}
+li{margin:6px 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin-top:12px}
+th,td{text-align:left;border-bottom:1px solid var(--line);padding:9px}
+th{background:#f0f5fc}
+.scroll{overflow-x:auto}
+.question{padding:16px 0;border-bottom:1px solid var(--line)}
+.question:last-child{border-bottom:0}
+.question h3{margin-bottom:12px}
+.question select{max-width:740px}
+.feedback{font-size:.91rem;margin-top:10px}
+.feedback:empty{display:none}
+.good{color:var(--green)}
+.bad{color:var(--red)}
+select.correct{border:2px solid var(--green);background:#effaf4}
+select.incorrect{border:2px solid var(--red);background:#fff2f4}
+.result{border-left:4px solid var(--blue);padding:12px 15px;background:#edf3ff;border-radius:0 10px 10px 0;margin:15px 0}
+.sequence{display:flex;gap:7px;flex-wrap:wrap;align-items:stretch;margin:15px 0}
+.codon-card{display:flex;flex-direction:column;min-width:92px;align-items:center;border:1px solid #c4d3e5;border-radius:11px;padding:9px;background:#f5f8fd}
+.codon-card b{font-family:ui-monospace,Consolas,monospace;font-size:1.15rem;letter-spacing:.12em}
+.codon-card span{font-size:.85rem;color:var(--muted);margin-top:3px}
+.codon-card.active{background:#fff3d6;border:2px solid #b67b12;padding:8px}
+.codon-card.changed{background:#fff0e1;border-color:#ce8727}
+.codon-card.stopped{opacity:.45}
+.terminal{font-family:ui-monospace,Consolas,monospace;overflow-wrap:anywhere;background:#f0f5fb;padding:12px;border-radius:10px;letter-spacing:.07em}
+.translation-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.translation-grid label{padding:10px;background:#f5f8fd;border-radius:10px}
+.translation-grid select{font-size:.85rem;padding:8px;margin-bottom:0}
+footer{color:var(--muted);font-size:.8rem;text-align:center;padding:18px}
+[hidden]{display:none!important}
+@media(max-width:850px){.wheel-layout{grid-template-columns:1fr}.controls{margin-top:0}.translation-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.wrap{padding:12px}header{padding:23px}.panel,.card{padding:17px}.grid{grid-template-columns:1fr}.tabs{gap:7px}.tabs button{flex:1 1 40%;font-size:.9rem;padding:10px 6px}.translation-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{body{background:white}.tabs,.actions,footer{display:none}header{background:white;color:black;border:1px solid #aaa}header p{color:#333}.wrap{padding:0}.card,.question{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div class="eyebrow">Biologie · Klasse 12 · Leistungsfach</div>
+<h1>CodeLab: Der genetische Code</h1>
+<p>Vom Basentriplett zur Aminosäure: Erkunde die Codesonne, übersetze eine mRNA und untersuche, wie Mutationen den Informationsgehalt verändern.</p>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Lernbereiche">
+<button id="tab-basics" role="tab" aria-controls="basics" aria-selected="true">1 · Verstehen</button>
+<button id="tab-wheel" role="tab" aria-controls="wheel" aria-selected="false" tabindex="-1">2 · Codesonne</button>
+<button id="tab-practice" role="tab" aria-controls="practice" aria-selected="false" tabindex="-1">3 · Üben</button>
+<button id="tab-lab" role="tab" aria-controls="lab" aria-selected="false" tabindex="-1">4 · Mutationslabor</button>
+</nav>
+
+<main>
+<section id="basics" role="tabpanel" aria-labelledby="tab-basics">
+<div class="panel">
+<h2>Vier Kennzeichen – ein Übersetzungssystem</h2>
+<p>Der genetische Code beschreibt die Zuordnung von <strong>mRNA-Codons</strong> zu Aminosäuren oder Stoppsignalen. Ribosomen lesen die mRNA in Richtung <strong>5′ → 3′</strong>.</p>
+<div class="callout">Die Codesonne wird mit <strong>mRNA-Codons</strong> benutzt, nicht unmittelbar mit dem DNA-Matrizenstrang oder einem tRNA-Anticodon. RNA enthält U statt T.</div>
+<div class="grid">
+<article class="card">
+<span class="pill">1 · Triplett-Code</span>
+<h3>Drei Basen bilden ein Codon</h3>
+<p>Vier Basen stehen zur Verfügung: U, C, A und G. Zwei Basen pro Codon würden nur 16 Kombinationen ergeben – zu wenig für 20 proteinogene Standardaminosäuren. Drei Basen ermöglichen 64 Kombinationen.</p>
+<div class="mini"><span class="chip">AUG</span><span class="arrow">→</span><strong>Methionin</strong></div>
+<p class="note">Im Standardcode stehen 61 Codons für Aminosäuren; drei sind Stopcodons. AUG codiert für Methionin und ist in der Regel das Startcodon.</p>
+</article>
+<article class="card">
+<span class="pill">2 · Kommafrei</span>
+<h3>Keine Trennzeichen zwischen Codons</h3>
+<p>Im codierenden Bereich wird ab dem festgelegten Start lückenlos in Dreiergruppen gelesen. Die Trennstriche in Darstellungen sind nur Lesehilfen.</p>
+<div class="mini"><span class="chip">AUG</span><span class="chip">GCU</span><span class="chip">UUU</span></div>
+<p class="note">Tatsächliche Basenfolge: AUGGCUUUU. Wird eine einzelne Base eingefügt oder entfernt, verschiebt sich das nachfolgende Leseraster.</p>
+<p class="note"><strong>Zusätzlich nicht überlappend:</strong> Im betrachteten offenen Leserahmen gehört eine Base jeweils nur zu einem Codon. Das ist eine weitere, von „kommafrei“ zu unterscheidende Eigenschaft.</p>
+</article>
+<article class="card">
+<span class="pill">3 · Nahezu universell</span>
+<h3>Weitgehend dieselbe Zuordnung</h3>
+<p>Bei sehr vielen Organismen besitzen dieselben Codons dieselbe Bedeutung. Diese Gemeinsamkeit ist ein Indiz für die gemeinsame Abstammung des Lebens.</p>
+<div class="mini"><span class="chip">UUU</span><span class="arrow">→</span><strong>Phenylalanin</strong></div>
+<p class="note">Es gibt Abweichungen: UGA bedeutet im Standardcode „Stop“, in menschlichen Mitochondrien dagegen „Tryptophan“.</p>
+<p class="note">Gleicher Code bedeutet nicht gleiche Gene oder gleiche Proteine. Für die Expression eines fremden Gens müssen außerdem passende regulatorische und zelluläre Voraussetzungen vorliegen.</p>
+</article>
+<article class="card">
+<span class="pill">4 · Redundant / degeneriert</span>
+<h3>Mehrere Codons – dieselbe Aminosäure</h3>
+<p>Verschiedene Codons können dieselbe Aminosäure festlegen. Zum Beispiel codieren GCU, GCC, GCA und GCG alle für Alanin.</p>
+<div class="mini"><span class="chip">UUU</span><span class="chip">UUC</span><span class="arrow">→</span><strong>Phenylalanin</strong></div>
+<p class="note">Der Standardcode ist dabei eindeutig: Ein bestimmtes Codon hat innerhalb dieser Zuordnung genau eine Bedeutung. Redundanz bedeutet nicht Mehrdeutigkeit.</p>
+<p class="note">Methionin und Tryptophan werden im Standardcode jeweils nur durch ein Codon codiert.</p>
+</article>
+</div>
+</div>
+<div class="actions"><button class="primary" data-goto="wheel">Zur Codesonne →</button></div>
+</section>
+
+<section id="wheel" role="tabpanel" aria-labelledby="tab-wheel" hidden>
+<div class="panel">
+<h2>Die interaktive Codesonne</h2>
+<p>Lies <strong>von innen nach außen</strong>: 1. Base → 2. Base → 3. Base → Aminosäure. Wähle die Basen über die Menüs oder klicke auf ein Segment im äußeren Ring.</p>
+<div class="wheel-layout">
+<div class="wheelbox">
+<canvas id="codeWheel" width="960" height="960" role="img" aria-label="Genetische Codesonne des Standardcodes. Die vollständige Zuordnung ist auch über die Basenauswahl und die Tabelle darunter zugänglich.">Bitte verwende einen Browser mit Canvas-Unterstützung.</canvas>
+<div class="legend">
+<span><i class="swatch" style="background:#dcecff"></i>unpolar</span>
+<span><i class="swatch" style="background:#dcf4e8"></i>polar, ungeladen</span>
+<span><i class="swatch" style="background:#ffe7cf"></i>basisch</span>
+<span><i class="swatch" style="background:#f9dfe5"></i>sauer</span>
+<span><i class="swatch" style="background:#eee4ff"></i>Stop</span>
+</div>
+</div>
+<aside class="controls">
+<h3>Dein Codon · 5′ → 3′</h3>
+<div class="base-selects">
+<label for="base1">1. Base<select id="base1"></select></label>
+<label for="base2">2. Base<select id="base2"></select></label>
+<label for="base3">3. Base<select id="base3"></select></label>
+</div>
+<div id="meaning" class="meaning" role="status"></div>
+<div class="actions"><button id="randomCodon">Zufälliges Codon</button></div>
+<h3>Redundanz sichtbar machen</h3>
+<p class="note">Alle Codons mit derselben Aminosäure werden zusätzlich im äußeren Ring markiert.</p>
+<div id="synonyms" class="row"></div>
+<div class="callout" id="wheelException">Die Codesonne zeigt den Standardcode.</div>
+</aside>
+</div>
+<details>
+<summary>Vollständige Codontabelle und Abkürzungen</summary>
+<p class="note">Aminosäuren werden in der Sonne mit ihrem Dreibuchstabencode angegeben. Die Farbgruppen beziehen sich vereinfacht auf die Seitenketten.</p>
+<div class="scroll"><table><thead><tr><th>Codons · 5′ → 3′</th><th>Bedeutung</th><th>Kürzel</th></tr></thead><tbody id="codeTable"></tbody></table></div>
+</details>
+</div>
+</section>
+
+<section id="practice" role="tabpanel" aria-labelledby="tab-practice" hidden>
+<div class="panel">
+<h2>Wissen anwenden</h2>
+<p class="note">Nutze bei Bedarf die Codesonne. Beim Wechsel zwischen den Bereichen bleiben deine Eingaben erhalten. Alle Aufgaben beziehen sich auf den Standardcode.</p>
+<div id="questions"></div>
+<div class="question" id="translationQuestion">
+<h3>6 · Eine mRNA übersetzen</h3>
+<p>Die Translation beginnt am dargestellten AUG. Ordne die Bedeutungen der fünf Codons zu.</p>
+<p class="terminal">5′—AUG GCU UUC UGG UAA—3′</p>
+<div class="translation-grid" id="translationInputs"></div>
+<div id="translationFeedback" class="feedback" aria-live="polite"></div>
+</div>
+<div class="actions">
+<button id="checkAll" class="primary">Antworten prüfen</button>
+<button id="showSolutions" class="secondary">Lösungen mit Begründung</button>
+<button id="resetPractice">Zurücksetzen</button>
+</div>
+<div id="practiceResult" class="result" role="status" hidden></div>
+<div id="solutions" hidden></div>
+</div>
+</section>
+
+<section id="lab" role="tabpanel" aria-labelledby="tab-lab" hidden>
+<div class="panel">
+<h2>Mutationslabor</h2>
+<p>Vergleiche einen mRNA-Ausschnitt mit verschiedenen Varianten. Das Startcodon bleibt erhalten; das Leseraster beginnt immer bei AUG.</p>
+<label for="mutation">Variante auswählen</label>
+<select id="mutation">
+<option value="original">Referenzsequenz – unverändert</option>
+<option value="silent">Basenaustausch: GCU → GCC</option>
+<option value="missense">Basenaustausch: UUU → UAU</option>
+<option value="nonsense">Basenaustausch: UGG → UGA</option>
+<option value="deletion">Deletion: erste Base nach AUG entfernt</option>
+<option value="insertion">Insertion: A direkt nach AUG eingefügt</option>
+</select>
+<h3>Referenz</h3>
+<div id="referenceSequence" class="sequence"></div>
+<h3>Gewählte Variante</h3>
+<div id="variantRaw" class="terminal"></div>
+<div id="variantSequence" class="sequence"></div>
+<div class="actions">
+<button id="stepTranslation" class="primary">Nächstes Codon lesen</button>
+<button id="readAll">Bis Stop / Ausschnittende lesen</button>
+<button id="restartTranslation">Lesen zurücksetzen</button>
+</div>
+<div id="ribosomeStatus" class="result" role="status"></div>
+<div class="callout" id="mutationExplanation"></div>
+<p class="note">Vereinfachtes Modell: Es wird nur ein mRNA-Ausschnitt betrachtet. Nach einem Stopcodon endet die Translation. Ein unvollständiges Triplett am Ausschnittende ist kein Stoppsignal. Aus einer veränderten Aminosäuresequenz lässt sich allein noch keine sichere Aussage über die Proteinfunktion ableiten.</p>
+</div>
+</section>
+</main>
+<footer>CodeLab · Eine HTML-Datei · Vollständig offline · Keine externen Bibliotheken und keine Datenübertragung · Eingaben bleiben nur bis zum Neuladen erhalten.</footer>
+</div>
+
+<script>
+"use strict";
+
+/* Vollständiger Standardcode in der Basenreihenfolge U, C, A, G. */
+const BASES=["U","C","A","G"];
+const AA={
+F:["Phenylalanin","Phe","unpolar"],L:["Leucin","Leu","unpolar"],
+I:["Isoleucin","Ile","unpolar"],M:["Methionin","Met","unpolar"],
+V:["Valin","Val","unpolar"],S:["Serin","Ser","polar"],
+P:["Prolin","Pro","unpolar"],T:["Threonin","Thr","polar"],
+A:["Alanin","Ala","unpolar"],Y:["Tyrosin","Tyr","polar"],
+H:["Histidin","His","basisch"],Q:["Glutamin","Gln","polar"],
+N:["Asparagin","Asn","polar"],K:["Lysin","Lys","basisch"],
+D:["Asparaginsäure","Asp","sauer"],E:["Glutaminsäure","Glu","sauer"],
+C:["Cystein","Cys","polar"],W:["Tryptophan","Trp","unpolar"],
+R:["Arginin","Arg","basisch"],G:["Glycin","Gly","unpolar"],
+"*":["Stoppsignal","Stop","stop"]
+};
+const CODE_ROWS=[
+"FFLLSSSSYY**CC*W",
+"LLLLPPPPHHQQRRRR",
+"IIIMTTTTNNKKSSRR",
+"VVVVAAAADDEEGGGG"
+];
+const CODE={},CODONS=[];
+BASES.forEach((a,i)=>BASES.forEach((b,j)=>BASES.forEach((c,k)=>{
+const codon=a+b+c;CODE[codon]=CODE_ROWS[i][j*4+k];CODONS.push(codon);
+})));
+const COLORS={unpolar:"#dcecff",polar:"#dcf4e8",basisch:"#ffe7cf",sauer:"#f9dfe5",stop:"#eee4ff"};
+const $=id=>document.getElementById(id);
+
+/* Navigation mit Tastaturbedienung. */
+const AREAS=["basics","wheel","practice","lab"];
+function openArea(id,focus=false){
+AREAS.forEach(name=>{
+const active=name===id;
+$(name).hidden=!active;
+$("tab-"+name).setAttribute("aria-selected",String(active));
+$("tab-"+name).tabIndex=active?0:-1;
+});
+if(focus)$("tab-"+id).focus();
+if(id==="wheel")drawWheel();
+}
+AREAS.forEach(id=>$("tab-"+id).addEventListener("click",()=>openArea(id)));
+document.querySelectorAll("[data-goto]").forEach(b=>b.onclick=()=>openArea(b.dataset.goto,true));
+document.querySelector(".tabs").addEventListener("keydown",e=>{
+const i=AREAS.findIndex(id=>$("tab-"+id)===document.activeElement);
+if(i<0)return;
+let next=i;
+if(e.key==="ArrowRight")next=(i+1)%AREAS.length;
+else if(e.key==="ArrowLeft")next=(i+AREAS.length-1)%AREAS.length;
+else if(e.key==="Home")next=0;
+else if(e.key==="End")next=AREAS.length-1;
+else return;
+e.preventDefault();openArea(AREAS[next],true);
+});
+
+/* Canvas-Codesonne: alle Koordinaten in einem logischen 640er-System. */
+const canvas=$("codeWheel"),ctx=canvas.getContext("2d");
+const CX=320,RADII=[35,99,159,218,286];
+let selectedCodon="AUG";
+for(let i=1;i<=3;i++){
+BASES.forEach(base=>{
+const option=document.createElement("option");
+option.value=base;option.textContent=base;$("base"+i).appendChild(option);
+});
+$("base"+i).addEventListener("change",()=>chooseCodon($("base1").value+$("base2").value+$("base3").value));
+}
+function sector(r0,r1,a0,a1,fill){
+ctx.beginPath();
+ctx.arc(CX,CX,r1,a0,a1);
+ctx.arc(CX,CX,r0,a1,a0,true);
+ctx.closePath();
+ctx.fillStyle=fill;ctx.fill();
+ctx.strokeStyle="#ffffff";ctx.lineWidth=1.1;ctx.stroke();
+}
+function outline(r0,r1,a0,a1,color,width){
+ctx.beginPath();
+ctx.arc(CX,CX,r1-1,a0,a1);
+ctx.arc(CX,CX,r0+1,a1,a0,true);
+ctx.closePath();ctx.lineWidth=width;ctx.strokeStyle=color;ctx.stroke();
+}
+function wheelLabel(text,r,a,size,radial=false){
+ctx.save();
+ctx.translate(CX+Math.cos(a)*r,CX+Math.sin(a)*r);
+if(radial){
+let turn=a,normal=((a%(2*Math.PI))+2*Math.PI)%(2*Math.PI);
+if(normal>Math.PI/2&&normal<Math.PI*1.5)turn+=Math.PI;
+ctx.rotate(turn);
+}
+ctx.font="750 "+size+"px system-ui, sans-serif";
+ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle="#1b3047";
+ctx.fillText(text,0,0);ctx.restore();
+}
+function drawWheel(){
+if(!ctx)return;
+ctx.setTransform(canvas.width/640,0,0,canvas.height/640,0,0);
+ctx.clearRect(0,0,640,640);
+ctx.fillStyle="#ffffff";ctx.fillRect(0,0,640,640);
+const start=-Math.PI/2,quarter=Math.PI/2,step=2*Math.PI/64;
+BASES.forEach((b1,i)=>{
+const a=start+i*quarter;
+sector(RADII[0],RADII[1],a,a+quarter,"#edf3fc");
+wheelLabel(b1,67,a+quarter/2,24);
+BASES.forEach((b2,j)=>{
+const b=a+j*quarter/4;
+sector(RADII[1],RADII[2],b,b+quarter/4,"#f2f6fc");
+wheelLabel(b2,129,b+quarter/8,18);
+BASES.forEach((b3,k)=>{
+const c=b+k*step,codon=b1+b2+b3,info=AA[CODE[codon]];
+sector(RADII[2],RADII[3],c,c+step,"#f9fbfe");
+wheelLabel(b3,188.5,c+step/2,12);
+sector(RADII[3],RADII[4],c,c+step,COLORS[info[2]]);
+wheelLabel(info[1],252,c+step/2,10,true);
+});
+});
+});
+/* Synonyme außen mit einem zusätzlichen grünen Bogen markieren. */
+CODONS.forEach((codon,index)=>{
+if(CODE[codon]!==CODE[selectedCodon])return;
+const a=start+index*step;
+ctx.beginPath();ctx.arc(CX,CX,292,a+.009,a+step-.009);
+ctx.strokeStyle="#16734f";ctx.lineWidth=4;ctx.stroke();
+});
+const index=CODONS.indexOf(selectedCodon);
+const i=Math.floor(index/16),j=Math.floor(index/4)%4;
+outline(RADII[0],RADII[1],start+i*quarter,start+(i+1)*quarter,"#15365b",3);
+outline(RADII[1],RADII[2],start+i*quarter+j*quarter/4,start+i*quarter+(j+1)*quarter/4,"#15365b",3);
+outline(RADII[2],RADII[4],start+index*step,start+(index+1)*step,"#15365b",3);
+ctx.beginPath();ctx.arc(CX,CX,34,0,2*Math.PI);
+ctx.fillStyle="#ffffff";ctx.fill();ctx.strokeStyle="#c4d2e1";ctx.lineWidth=1;ctx.stroke();
+wheelLabel("mRNA",0,0,10);
+ctx.font="12px system-ui, sans-serif";ctx.textAlign="center";ctx.fillStyle="#52677f";
+ctx.fillText("Innen → außen · mRNA 5′ → 3′",320,625);
+}
+function chooseCodon(codon){
+if(!CODE[codon])return;
+selectedCodon=codon;
+for(let i=0;i<3;i++)$("base"+(i+1)).value=codon[i];
+const symbol=CODE[codon],info=AA[symbol];
+$("meaning").replaceChildren();
+const title=document.createElement("strong");
+title.textContent=codon+" → "+info[0];$("meaning").appendChild(title);
+const description=document.createElement("small");
+description.textContent=symbol==="*"?"Stoppsignal: keine Aminosäure; beendet die Translation.":
+"Abkürzung: "+info[1]+(codon==="AUG"?" · AUG dient in der Regel auch als Startcodon.":"");
+$("meaning").appendChild(description);
+$("synonyms").replaceChildren();
+CODONS.filter(c=>CODE[c]===symbol).forEach(c=>{
+const button=document.createElement("button");
+button.textContent=c;button.className="secondary";
+button.setAttribute("aria-label",c+" auswählen");
+button.onclick=()=>chooseCodon(c);$("synonyms").appendChild(button);
+});
+$("wheelException").textContent=codon==="UGA"
+?"Ausnahme: UGA codiert in menschlichen Mitochondrien für Tryptophan, im Standardcode dagegen für Stop."
+:symbol==="*"?"Die drei markierten Codons sind alternative Stoppsignale, keine Codons einer gemeinsamen Aminosäure."
+:"Grün markiert: Codons derselben Aminosäure. Dunkel umrandet: der Lesepfad deines gewählten Codons.";
+drawWheel();
+}
+canvas.addEventListener("click",event=>{
+const rect=canvas.getBoundingClientRect();
+const x=(event.clientX-rect.left)*640/rect.width-CX;
+const y=(event.clientY-rect.top)*640/rect.height-CX;
+const radius=Math.hypot(x,y);
+if(radius<RADII[2]||radius>RADII[4])return;
+const angle=(Math.atan2(y,x)+Math.PI/2+2*Math.PI)%(2*Math.PI);
+chooseCodon(CODONS[Math.min(63,Math.floor(angle/(2*Math.PI)*64))]);
+});
+$("randomCodon").onclick=()=>chooseCodon(CODONS[Math.floor(Math.random()*64)]);
+Object.keys(AA).forEach(symbol=>{
+const tr=document.createElement("tr");
+[CODONS.filter(c=>CODE[c]===symbol).join(", "),AA[symbol][0],AA[symbol][1]].forEach(text=>{
+const td=document.createElement("td");td.textContent=text;tr.appendChild(td);
+});
+$("codeTable").appendChild(tr);
+});
+
+/* Verständnisaufgaben. */
+const QUESTIONS=[
+{
+title:"1 · Triplett-Code",
+text:"Welche Aussage erklärt, warum zwei Basen pro Codon für die 20 Standardaminosäuren nicht ausreichen?",
+options:["Zwei Basen erlauben nur 16 unterschiedliche Kombinationen.","Zwei Basen erlauben 64 unterschiedliche Kombinationen.","Zwei Basen können nur ein Stoppsignal bilden."],
+answer:0,
+why:"Bei vier Basensorten ergeben zwei Positionen 16 Kombinationen. Drei Positionen ermöglichen dagegen 64 Codons."
+},
+{
+title:"2 · Redundant, aber eindeutig",
+text:"Was bedeutet die Redundanz des Standardcodes?",
+options:["Ein Codon legt abhängig vom Zufall mehrere Aminosäuren fest.","Jede Aminosäure besitzt genau ein Codon.","Mehrere verschiedene Codons können dieselbe Aminosäure festlegen."],
+answer:2,
+why:"Zum Beispiel codieren UUU und UUC beide für Phenylalanin. Das einzelne Codon bleibt innerhalb des Standardcodes eindeutig zugeordnet."
+},
+{
+title:"3 · Kommafrei und Leseraster",
+text:"Ausgehend vom Startcodon AUG: Wie wird AUGGCUUUU in Codons eingeteilt?",
+options:["A · UGG · CUU · UU","AUG · GCU · UUU","AUGG · CUUUU"],
+answer:1,
+why:"Ab dem festgelegten Start werden lückenlose, nicht überlappende Dreiergruppen gelesen. Die Trennzeichen sind nur eine Darstellungshilfe."
+},
+{
+title:"4 · Nahezu universell",
+text:"UGA steht im Standardcode für Stop, in menschlichen Mitochondrien für Tryptophan. Was zeigt das?",
+options:["Der genetische Code ist bei jeder Art vollständig verschieden.","Mitochondrien übersetzen keine mRNA.","Die Zuordnung ist weit verbreitet, aber nicht ausnahmslos identisch."],
+answer:2,
+why:"Die meisten Codonzuordnungen stimmen organismenübergreifend überein. Abweichende Codes begründen die Einschränkung „nahezu“."
+},
+{
+title:"5 · Redundanz und Mutation",
+text:"Ein Codon ändert sich von GCU zu GCC. Was lässt sich daraus sicher ableiten?",
+options:["Die Aminosäure bleibt Alanin.","Das Protein ist immer vollständig funktionslos.","Die Translation endet sofort."],
+answer:0,
+why:"Beide Codons stehen für Alanin: Es ist ein synonymer Basenaustausch. Daraus folgt nicht, dass jede synonyme Mutation in jedem biologischen Kontext folgenlos sein muss."
+}
+];
+function makeSelect(id,options){
+const select=document.createElement("select");select.id=id;
+const empty=document.createElement("option");empty.value="";empty.textContent="Bitte wählen …";select.appendChild(empty);
+options.forEach((text,i)=>{
+const option=document.createElement("option");option.value=String(i);option.textContent=text;select.appendChild(option);
+});
+return select;
+}
+QUESTIONS.forEach((q,i)=>{
+const article=document.createElement("article");article.className="question";
+const heading=document.createElement("h3");heading.textContent=q.title;article.appendChild(heading);
+const label=document.createElement("label");label.htmlFor="question-"+i;label.textContent=q.text;article.appendChild(label);
+const select=makeSelect("question-"+i,q.options);
+select.setAttribute("aria-describedby","feedback-"+i);article.appendChild(select);
+const feedback=document.createElement("div");feedback.id="feedback-"+i;feedback.className="feedback";feedback.setAttribute("aria-live","polite");
+article.appendChild(feedback);$("questions").appendChild(article);
+});
+const TRANSLATE=["AUG","GCU","UUC","UGG","UAA"];
+const TRANSLATE_OPTIONS=["Methionin","Alanin","Phenylalanin","Tryptophan","Stoppsignal","Leucin"];
+TRANSLATE.forEach((codon,i)=>{
+const label=document.createElement("label");
+label.htmlFor="translate-"+i;label.textContent=codon;
+const select=makeSelect("translate-"+i,TRANSLATE_OPTIONS);
+select.setAttribute("aria-describedby","translationFeedback");
+label.appendChild(select);$("translationInputs").appendChild(label);
+});
+function mark(select,ok){
+select.classList.toggle("correct",ok);
+select.classList.toggle("incorrect",!ok);
+select.setAttribute("aria-invalid",String(!ok));
+}
+$("checkAll").onclick=()=>{
+let score=0;
+QUESTIONS.forEach((q,i)=>{
+const select=$("question-"+i),ok=select.value===String(q.answer);
+mark(select,ok);if(ok)score++;
+const feedback=$("feedback-"+i);
+feedback.className="feedback "+(ok?"good":"bad");
+feedback.textContent=ok?"✓ Richtig. "+q.why:select.value===""?"Bitte wähle noch eine Antwort.":"Noch nicht richtig. Prüfe die passende Eigenschaft noch einmal.";
+});
+let translationScore=0;
+TRANSLATE.forEach((codon,i)=>{
+const select=$("translate-"+i);
+const ok=select.value!==""&&TRANSLATE_OPTIONS[Number(select.value)]===AA[CODE[codon]][0];
+mark(select,ok);if(ok){score++;translationScore++}
+});
+$("translationFeedback").className="feedback "+(translationScore===5?"good":"bad");
+$("translationFeedback").textContent=translationScore+" von 5 Codons richtig. "+(translationScore===5?"Die Peptidsequenz lautet Met–Ala–Phe–Trp; Stop ist keine Aminosäure.":"Lies die Codesonne von innen nach außen.");
+$("practiceResult").hidden=false;
+$("practiceResult").textContent=score+" von 10 Antworten richtig. "+(score===10?"Sehr gut!":"Du kannst deine Antworten verbessern und erneut prüfen.");
+};
+$("showSolutions").onclick=()=>{
+$("solutions").replaceChildren();
+QUESTIONS.forEach(q=>{
+const p=document.createElement("p");p.textContent=q.title+": "+q.options[q.answer]+" "+q.why;
+$("solutions").appendChild(p);
+});
+const p=document.createElement("p");
+p.textContent="6 · AUG → Methionin; GCU → Alanin; UUC → Phenylalanin; UGG → Tryptophan; UAA → Stoppsignal. Vier Aminosäuren werden eingebaut.";
+$("solutions").appendChild(p);$("solutions").hidden=false;$("solutions").className="result";
+};
+$("resetPractice").onclick=()=>{
+document.querySelectorAll("#practice select").forEach(s=>{
+s.value="";s.classList.remove("correct","incorrect");s.removeAttribute("aria-invalid");
+});
+document.querySelectorAll("#practice .feedback").forEach(f=>f.textContent="");
+$("solutions").hidden=true;$("practiceResult").hidden=true;
+};
+$("practice").addEventListener("change",e=>{
+if(!e.target.matches("select"))return;
+e.target.classList.remove("correct","incorrect");e.target.removeAttribute("aria-invalid");
+const feedback=e.target.closest(".question").querySelector(".feedback");
+if(feedback)feedback.textContent="";
+$("practiceResult").hidden=true;
+});
+
+/* Mutationslabor: bewusst fester Ausschnitt und explizites Leseraster. */
+const ORIGINAL="AUGGCUUUUUGGCAAGAAUAA";
+const VARIANTS={
+original:{sequence:ORIGINAL,explanation:"Referenz: Met–Ala–Phe–Trp–Gln–Glu. UAA beendet die Translation; es wird keine weitere Aminosäure angehängt."},
+silent:{sequence:ORIGINAL.slice(0,5)+"C"+ORIGINAL.slice(6),explanation:"Synonymer Basenaustausch: GCU → GCC. Beide Codons codieren für Alanin; die Aminosäuresequenz dieses Ausschnitts bleibt gleich. Das illustriert die Redundanz des Codes."},
+missense:{sequence:ORIGINAL.slice(0,7)+"A"+ORIGINAL.slice(8),explanation:"Missense-Mutation: UUU → UAU. Anstelle von Phenylalanin wird Tyrosin eingebaut. Die übrigen Codongrenzen bleiben erhalten."},
+nonsense:{sequence:ORIGINAL.slice(0,11)+"A"+ORIGINAL.slice(12),explanation:"Nonsense-Mutation: UGG → UGA. Ein Aminosäurecodon wird zu einem vorzeitigen Stopcodon. Im Modell endet die Translation nach Met–Ala–Phe."},
+deletion:{sequence:ORIGINAL.slice(0,3)+ORIGINAL.slice(4),explanation:"Rastermutation durch Deletion einer Base nach AUG: Die folgenden Codons werden neu gruppiert. Ein einzelner Basenverlust ist kein Vielfaches von drei. Der gezeigte Ausschnitt endet ohne Stopcodon und mit einem unvollständigen Triplett."},
+insertion:{sequence:ORIGINAL.slice(0,3)+"A"+ORIGINAL.slice(3),explanation:"Rastermutation durch Insertion einer Base nach AUG: Die Codongrenzen verschieben sich. Hier entsteht im veränderten Leseraster ein neues Stopcodon UGA. Ein Ausschnitt kann nach einer Rastermutation also auch vorzeitig enden."}
+};
+let labCount=0;
+function chunks(sequence){
+const list=[];for(let i=0;i<sequence.length;i+=3)list.push(sequence.slice(i,i+3));return list;
+}
+function buildCodonCard(codon){
+const div=document.createElement("div");div.className="codon-card";
+const b=document.createElement("b");b.textContent=codon;div.appendChild(b);
+const span=document.createElement("span");span.textContent=codon.length===3?AA[CODE[codon]][1]:"unvollständig";div.appendChild(span);
+return div;
+}
+function currentParts(){return chunks(VARIANTS[$("mutation").value].sequence)}
+function readableLimit(parts){
+const stop=parts.findIndex(c=>c.length===3&&CODE[c]==="*");
+if(stop>=0)return stop+1;
+return parts.filter(c=>c.length===3).length;
+}
+function renderLab(){
+const key=$("mutation").value,variant=VARIANTS[key],parts=chunks(variant.sequence),reference=chunks(ORIGINAL);
+$("variantRaw").textContent="5′—"+variant.sequence+"—3′";
+$("variantSequence").replaceChildren();
+parts.forEach((codon,i)=>{
+const card=buildCodonCard(codon);
+if(codon!==reference[i])card.classList.add("changed");
+if(i===labCount-1)card.classList.add("active");
+const stop=parts.findIndex(c=>c.length===3&&CODE[c]==="*");
+if(stop>=0&&i>stop)card.classList.add("stopped");
+$("variantSequence").appendChild(card);
+});
+const read=parts.slice(0,labCount);
+const peptide=read.filter(c=>CODE[c]&&CODE[c]!=="*").map(c=>AA[CODE[c]][1]).join("–");
+const last=read[read.length-1],ended=last&&CODE[last]==="*";
+$("ribosomeStatus").textContent=labCount===0?"Bereit: Starte mit AUG.":ended?
+"Stopcodon erreicht. Gebildetes Peptid im Modell: "+peptide+".":
+"Bislang gelesen: "+read.join(" · ")+". Peptid: "+peptide+"."+(labCount>=readableLimit(parts)?" Ausschnittende erreicht; kein Stopcodon im dargestellten Leseraster.":"");
+$("mutationExplanation").textContent=variant.explanation;
+$("stepTranslation").disabled=labCount>=readableLimit(parts);
+$("readAll").disabled=labCount>=readableLimit(parts);
+}
+$("mutation").onchange=()=>{labCount=0;renderLab()};
+$("stepTranslation").onclick=()=>{if(labCount<readableLimit(currentParts()))labCount++;renderLab()};
+$("readAll").onclick=()=>{labCount=readableLimit(currentParts());renderLab()};
+$("restartTranslation").onclick=()=>{labCount=0;renderLab()};
+chunks(ORIGINAL).forEach(c=>$("referenceSequence").appendChild(buildCodonCard(c)));
+
+/* Initialisierung erst nach Definition aller Funktionen und Daten. */
+chooseCodon("AUG");
+renderLab();
+</script>
+</body>
+</html>
